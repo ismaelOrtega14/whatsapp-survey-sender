@@ -1,5 +1,10 @@
 # Selenium drivers folder
 drivers
+cookies.pkl
+userData
+
+# Ide
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
