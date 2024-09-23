@@ -7,5 +7,8 @@ setup(
    author='Ismael Ortega',
    author_email='ismael.ortega.works@gmail.com',
    packages=['whatsapp_survey_sender'],  #same as name
-   install_requires=['selenium'], #external packages as dependencies
+   install_requires=[
+      'selenium',
+      'jsonata-python'
+   ], #external packages as dependencies
 )
