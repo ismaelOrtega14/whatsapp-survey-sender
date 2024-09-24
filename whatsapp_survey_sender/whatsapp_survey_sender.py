@@ -148,7 +148,8 @@ if __name__ == '__main__':
                         help="Json file with survey configuration")
     parser.add_argument("-r", "--remote",
                         dest="remote",
-                        help="Remote Selenium browser. E.g. http://localhost:4444")
+                        help="Remote Selenium browser. E.g. http://localhost:4444",
+                        default="http://localhost:4444")
     args = parser.parse_args()
 
     main(args)
