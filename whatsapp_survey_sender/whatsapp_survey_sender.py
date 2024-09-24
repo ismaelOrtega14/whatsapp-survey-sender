@@ -14,65 +14,25 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 
 
-def init_edge_driver(data_folder, gui):
-    """Init a Edge driver
+def init_driver(remote="http://localhost:4444"):
+    """Init a Chrome remote driver
 
     Args:
-        dataFolder (str): Folder path where store browser files.
-        gui (bool): True to open a browser window.
-
-    Returns:
-        (RemoteWebDriver): Driver to control the browser
-    """
-    options = webdriver.EdgeOptions()
-    options.add_argument(f"user-data-dir={os.path.abspath(data_folder)}")
-
-    if not gui:
-        print("Starting Edge headless mode!")
-        options.use_chromium = True
-        options.add_argument("--headless=new")
-
-    driver = webdriver.Edge(options=options)
-    return driver
-
-
-def init_chrome_driver(data_folder, gui):
-    """Init a Chrome driver
-
-    Args:
-        dataFolder (str): Folder path where store browser files.
-        gui (bool): True to open a browser window.
-
+        dataFolder (str, optional): Folder path where store browser files. Defaults to "./userData".
+        remote (str, optional): Remote selenium chrome. Defaults to "./userData".
     Returns:
         (RemoteWebDriver): Driver to control the browser
     """
     options = webdriver.ChromeOptions()
-    options.add_argument(f"user-data-dir={os.path.abspath(data_folder)}")
+    options.set_capability("se:name", "Survey sender")
+    options.add_argument("--user-data-dir=/home/seluser/userData")
 
-    if not gui:
-        print("Starting Chrome headless mode!")
-        options.add_argument("--headless=new")
+    driver = webdriver.Remote(
+        command_executor=f'{remote}/wd/hub',
+        options=options
+    )
 
-    driver = webdriver.Chrome(options=options)
-    return driver
-
-
-def init_driver(data_folder="./userData", gui=False, browser="chrome"):
-    """Initializes selenium driver
-
-    Args:
-        dataFolder (str, optional): Folder path where store browser files. Defaults to "./userData".
-        gui (bool, optional): True to open a browser window. Defaults to False.
-        browser (str, optional): Browser to use in selenium. Defaults to chrome
-
-    Returns:
-        (RemoteWebDriver): Driver to control the browser
-    """
-    match browser:
-        case "chrome":
-            driver = init_chrome_driver(data_folder, gui)
-        case "edge":
-            driver = init_edge_driver(data_folder, gui)
+    print("Created driver")
 
     driver.implicitly_wait(10)
     return driver
@@ -103,20 +63,28 @@ def send_survey(driver, survey):
     driver.get('https://web.whatsapp.com')
 
     if not driver.find_elements(By.XPATH, '//*[@title="Chats"]'):
+        canvas = wait_for_element(driver, (By.TAG_NAME, "canvas"))
+
+        print("Saving QR!")
+
+        # save to a file
+        canvas.screenshot(os.path.abspath("./login.png"))
+
         try:
-            wait_for_element((By.XPATH, '//*[@title="Chats"]'), 180)
+            wait_for_element(driver, (By.XPATH, '//*[@title="Chats"]'), 180)
             print("Loged!!!")
         except TimeoutException:
             print("Loading took too much time!")
 
+    print("Searching group")
     # Locate and interact with the search box to find the group
     search_box = wait_for_element(
-        driver, (By.XPATH, '//div[@contenteditable="true" and @data-tab="3"]'), timeout=10)
+        driver, (By.XPATH, '//div[@contenteditable="true" and @data-tab="3"]'), timeout=20)
     search_box.clear()
     search_box.send_keys(survey["group"])
     search_box.send_keys(Keys.ENTER)
 
-    # Find the message box and send the message
+    print("Creating survey")
     attach_button_xpath = (
         By.XPATH, '//div[@aria-label="Adjuntar" and @data-tab="10"]')
     wait_for_element(driver, attach_button_xpath, timeout=10).click()
@@ -158,10 +126,15 @@ def main(params):
     Args:
         params (object): Object with program arguments
     """
-    driver = init_driver(params.dataFolder, params.gui, params.browser)
+    driver = init_driver(params.remote)
 
     for survey in params.surveyFiles:
-        send_survey(driver, survey)
+        try:
+            send_survey(driver, survey)
+        finally:
+            driver.quit()
+
+    print("Finished OK!")
 
 
 if __name__ == '__main__':
@@ -173,20 +146,9 @@ if __name__ == '__main__':
                         type=argparse.FileType('r', encoding="UTF8"),
                         nargs='+',
                         help="Json file with survey configuration")
-    parser.add_argument("-b", "--browser",
-                        default="chrome",
-                        dest="browser",
-                        help="Select the browser to use in Selenium",
-                        choices=["chrome", "edge"])
-    parser.add_argument("-g", "--gui",
-                        action='store_true',
-                        default=False,
-                        dest="gui",
-                        help="Show the browser window")
-    parser.add_argument("--data_file",
-                        default="./userData",
-                        dest="dataFolder",
-                        help="Place where store the broswer files")
+    parser.add_argument("-r", "--remote",
+                        dest="remote",
+                        help="Remote Selenium browser. E.g. http://localhost:4444")
     args = parser.parse_args()
-    
+
     main(args)
