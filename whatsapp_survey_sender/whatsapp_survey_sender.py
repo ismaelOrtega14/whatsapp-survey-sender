@@ -51,7 +51,7 @@ def wait_for_element(driver, element_filter, timeout=30):
     return WebDriverWait(driver, timeout).until(EC.presence_of_element_located(element_filter))
 
 
-def send_survey(driver, survey):
+def send_survey(driver, survey, remote):
     """Sends a survey to whatsapp
 
     Args:
@@ -63,12 +63,7 @@ def send_survey(driver, survey):
     driver.get('https://web.whatsapp.com')
 
     if not driver.find_elements(By.XPATH, '//*[@title="Chats"]'):
-        canvas = wait_for_element(driver, (By.TAG_NAME, "canvas"))
-
-        print("Saving QR!")
-
-        # save to a file
-        canvas.screenshot(os.path.abspath("./login.png"))
+        print(f"Login needed! Enter into {remote}/ui/#/sessions")
 
         try:
             wait_for_element(driver, (By.XPATH, '//*[@title="Chats"]'), 180)
@@ -130,7 +125,7 @@ def main(params):
 
     for survey in params.surveyFiles:
         try:
-            send_survey(driver, survey)
+            send_survey(driver, survey, params.remote)
         finally:
             driver.quit()
 
