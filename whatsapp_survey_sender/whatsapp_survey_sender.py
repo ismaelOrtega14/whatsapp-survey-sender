@@ -1,7 +1,6 @@
 """Sends surveys from whatsapp
 """
 import json
-import os.path
 import argparse
 import time
 import jsonata
@@ -98,12 +97,14 @@ def send_survey(driver, survey, remote):
         .send_keys(Keys.TAB)
 
     for option in survey["options"]:
+        # Writes survey option and press twice tab to go to the next input
         action_chain.send_keys(option) \
             .send_keys(Keys.TAB) \
             .send_keys(Keys.TAB)
 
+    # Press twice tab to go to the multiple answers checkbox
     action_chain.send_keys(Keys.TAB) \
-        .send_keys(Keys.TAB) \
+        .send_keys(Keys.TAB)
 
     if not survey["multipleAnswers"]:
         action_chain.send_keys(Keys.ENTER)
@@ -121,13 +122,9 @@ def main(params):
     Args:
         params (object): Object with program arguments
     """
-    driver = init_driver(params.remote)
-
-    for survey in params.surveyFiles:
-        try:
+    with init_driver(params.remote) as driver:
+        for survey in params.surveyFiles:
             send_survey(driver, survey, params.remote)
-        finally:
-            driver.quit()
 
     print("Finished OK!")
 
