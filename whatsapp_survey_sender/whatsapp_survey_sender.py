@@ -77,6 +77,8 @@ def send_survey(driver, survey, remote):
     search_box.clear()
     search_box.send_keys(survey["group"])
     search_box.send_keys(Keys.ENTER)
+    
+    time.sleep(10) # Wait until is loaded
 
     print("Creating survey")
     attach_button_xpath = (
@@ -114,7 +116,7 @@ def send_survey(driver, survey, remote):
 
     action_chain.perform()
 
-    time.sleep(3)  # Wait until survey is done sending
+    time.sleep(60)  # Wait until survey is done sending
 
 
 def main(params):
