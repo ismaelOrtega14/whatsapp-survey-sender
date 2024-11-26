@@ -80,10 +80,11 @@ def send_survey(driver, survey, remote):
 
     print("Creating survey")
     attach_button_xpath = (
-        By.XPATH, '//div[@aria-label="Adjuntar" and @data-tab="10"]')
+        By.XPATH, '//*[@id="main"]/footer/div[1]/div/span/div/div[1]/div[2]/button')
+
     wait_for_element(driver, attach_button_xpath, timeout=10).click()
 
-    survey_button_xpath = (By.XPATH, '//span[text()="Encuesta"]')
+    survey_button_xpath = (By.XPATH, '//*[@id="app"]/div/span[5]/div/ul/div/div/div[5]/li/div/span')
     wait_for_element(driver, survey_button_xpath, timeout=10).click()
 
     action_chain = ActionChains(driver)
